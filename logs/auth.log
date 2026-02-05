@@ -1,0 +1,4 @@
+Feb  6 08:12:01 server sshd: Failed password from 192.168.1.10
+Feb  6 08:12:02 server sshd: Failed password from 192.168.1.10
+Feb  6 08:12:03 server sshd: Failed password from 10.0.0.5
+Feb  6 08:12:04 server sshd: Accepted password from 172.16.0.2
