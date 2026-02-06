@@ -13,6 +13,7 @@ def get_ip_details(ip):
             return None
 
         return {
+            "status": "success",
             "ip": ip,
             "country": data.get("country", "Unknown"),
             "region": data.get("regionName", "Unknown"),
