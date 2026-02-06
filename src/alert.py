@@ -1,36 +1,87 @@
+# src/alert.py
+
+import os
 import smtplib
 from email.message import EmailMessage
+from datetime import datetime
+from dotenv import load_dotenv
 
-SENDER_EMAIL = "cattack482@gmail.com"
-APP_PASSWORD = "hfmlvxrdjlfvirrr"  # app password WITHOUT spaces
-RECEIVER_EMAIL = "cattack482@gmail.com"
+# Load environment variables from .env
+load_dotenv()
+
+SENDER_EMAIL = os.getenv("SENDER_EMAIL")
+APP_PASSWORD = os.getenv("APP_PASSWORD")
+RECEIVER_EMAIL = os.getenv("RECEIVER_EMAIL")
 
 
-def send_email_alert(ip, attempts):
+def format_alert_email(ip, attempts, enrich=None, classification=None, threshold=None):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    lines = []
+    lines.append("🚨 SECURITY ALERT – IMMEDIATE ATTENTION REQUIRED\n")
+    lines.append("A potential brute-force login attack has been detected.\n")
+
+    lines.append("=== Incident Summary ===")
+    lines.append("Attack Type: Brute-Force Login Attempt")
+    lines.append("Severity: High")
+    lines.append(f"Detection Time: {timestamp}\n")
+
+    lines.append("=== Attacker Details ===")
+    lines.append(f"IP Address: {ip}")
+
+    if enrich and enrich.get("status") == "success":
+        lines.append(f"Country: {enrich.get('country')}")
+        lines.append(f"Region / City: {enrich.get('region')}, {enrich.get('city')}")
+        lines.append(f"ISP / Organization: {enrich.get('isp')}")
+        lines.append(f"Network (ASN): {enrich.get('asn')}")
+        lines.append(f"Proxy / VPN Detected: {enrich.get('proxy')}")
+        lines.append(f"Cloud / Hosting Provider: {enrich.get('hosting')}")
+    else:
+        lines.append("IP Intelligence: Unavailable")
+
+    lines.append("\n=== Attack Behavior ===")
+    lines.append(f"Failed Login Attempts: {attempts}")
+    lines.append(f"Attack Classification: {classification}")
+    lines.append(f"Detection Threshold: {threshold}\n")
+
+    lines.append("=== Recommended Actions ===")
+    lines.append("- Review authentication logs immediately")
+    lines.append("- Block the IP address if malicious")
+    lines.append("- Enforce strong passwords or MFA")
+    lines.append("- Monitor for further suspicious activity\n")
+
+    lines.append("This alert was generated automatically by Cyber Log Analyzer.")
+    lines.append("— Security Monitoring System")
+
+    return "\n".join(lines)
+
+
+def send_email_alert(ip, attempts, enrich=None, classification=None, threshold=None):
+    if not SENDER_EMAIL or not APP_PASSWORD or not RECEIVER_EMAIL:
+        print("❌ Email configuration missing (.env). Alert not sent.")
+        return
+
     msg = EmailMessage()
-    msg["Subject"] = "🚨 Brute-Force Attack Detected"
+    msg["Subject"] = f"🚨 Security Alert: Brute-Force Attack from {ip}"
     msg["From"] = SENDER_EMAIL
     msg["To"] = RECEIVER_EMAIL
 
-    msg.set_content(
-        f"""
-ALERT 🚨
-
-Brute-force attack detected!
-
-IP Address: {ip}
-Failed Attempts: {attempts}
-
-Please check your server immediately.
-"""
+    body = format_alert_email(
+        ip=ip,
+        attempts=attempts,
+        enrich=enrich,
+        classification=classification,
+        threshold=threshold
     )
+
+    msg.set_content(body)
 
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(SENDER_EMAIL, APP_PASSWORD)
             server.send_message(msg)
 
-        print("📧 Email alert sent successfully!")
+        print("📧 Professional security alert email sent successfully!")
 
     except Exception as e:
         print("❌ Email sending failed:", e)
