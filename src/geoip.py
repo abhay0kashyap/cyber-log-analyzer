@@ -5,7 +5,7 @@ def get_ip_details(ip):
     Fetch geolocation details for an IP address
     """
     try:
-        url = f"http://ip-api.com/json/{ip}"
+        url = f"http://ip-api.com/json/{ip}?fields=status,message,country,regionName,city,isp,org,as,hosting,proxy,lat,lon"
         response = requests.get(url, timeout=5)
         data = response.json()
 
@@ -21,6 +21,9 @@ def get_ip_details(ip):
             "isp": data.get("isp", "Unknown"),
             "org": data.get("org", "Unknown"),
             "asn": data.get("as", "Unknown"),
+            "lat": data.get("lat"),
+            "lon": data.get("lon"),
+            "map_url": f"https://www.google.com/maps?q={data.get('lat')},{data.get('lon')}",
             "hosting": data.get("hosting", False),
             "proxy": data.get("proxy", False)
         }

@@ -4,6 +4,7 @@ from collections import Counter
 
 from src.geoip import get_ip_details
 from src.alert import send_email_alert
+from src.csv_logger import log_attack_to_csv
 
 # Regex pattern to extract IPv4 addresses
 IP_PATTERN = r"\b\d{1,3}(?:\.\d{1,3}){3}\b"
@@ -32,6 +33,7 @@ def monitor_log_file(log_path, threshold=3):
 
             match = re.search(IP_PATTERN, line)
             if not match:
+                print(f"⚠️  Ignored line (No IPv4 found): {line.strip()}")
                 continue
 
             ip = match.group()
@@ -47,14 +49,20 @@ def monitor_log_file(log_path, threshold=3):
 
                 # --- GEO-IP ENRICHMENT ---
                 geo = get_ip_details(ip)
+                print("\n📍 Attacker Intelligence:")
                 if geo:
-                    print("\n📍 Attacker Intelligence:")
                     print(f"🌍 Country: {geo.get('country')}")
-                    print(f"🏙 City: {geo.get('city')}")
+                    print(f"🏙 City (ISP Node): {geo.get('city')}")
+                    print(f"📍 Approx Coordinates: {geo.get('lat')}, {geo.get('lon')}")
+                    print(f"🗺 Google Maps: {geo.get('map_url')}")
                     print(f"🏢 ISP: {geo.get('isp')}")
                     print(f"🛰 ASN: {geo.get('asn')}")
-                    print(f"☁ Hosting Provider: {geo.get('hosting')}")
-                    print(f"🕵 Proxy/VPN: {geo.get('proxy')}")
+                    print(f"☁ Hosting Provider: {'Yes' if geo.get('hosting') else 'No'}")
+                    print(f"🕵 Proxy/VPN: {'Yes' if geo.get('proxy') else 'No'}")
+                    print("   (Note: Location is based on ISP gateway, not exact GPS)")
+                else:
+                    print("⚠️  Location data unavailable.")
+                    print("   (This usually happens for Local IPs like 192.168.x.x or 127.0.0.1)")
 
                 # --- EMAIL ALERT ---
                 send_email_alert(
@@ -64,6 +72,9 @@ def monitor_log_file(log_path, threshold=3):
                     classification="Brute-Force Login Attempt",
                     threshold=threshold
                 )
+
+                # --- CSV LOGGING ---
+                log_attack_to_csv(ip, failed_ip_counter[ip], geo)
 
                 alerted_ips.add(ip)
                 print("✅ Alert processed successfully\n")

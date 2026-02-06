@@ -32,10 +32,10 @@ def format_alert_email(ip, attempts, enrich=None, classification=None, threshold
     if enrich and enrich.get("status") == "success":
         lines.append(f"Country: {enrich.get('country')}")
         lines.append(f"Region / City: {enrich.get('region')}, {enrich.get('city')}")
+        lines.append(f"Coordinates: {enrich.get('lat')}, {enrich.get('lon')}")
+        lines.append(f"Google Maps: {enrich.get('map_url')}")
         lines.append(f"ISP / Organization: {enrich.get('isp')}")
         lines.append(f"Network (ASN): {enrich.get('asn')}")
-        lines.append(f"Proxy / VPN Detected: {enrich.get('proxy')}")
-        lines.append(f"Cloud / Hosting Provider: {enrich.get('hosting')}")
         lines.append(f"Proxy / VPN Detected: {'Yes' if enrich.get('proxy') else 'No'}")
         lines.append(f"Cloud / Hosting Provider: {'Yes' if enrich.get('hosting') else 'No'}")
     else:
