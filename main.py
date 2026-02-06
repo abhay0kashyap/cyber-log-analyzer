@@ -1,40 +1,31 @@
 import argparse
-import csv
-from src.parser import get_failed_login_ips
-from src.detector import detect_bruteforce
+from src.realtime_monitor import monitor_log_file
 
-print("Cyber Log Analyzer started successfully")
 
-# Argument parser
-parser = argparse.ArgumentParser(description="Cybersecurity Log Analyzer")
-parser.add_argument(
-    "--threshold",
-    type=int,
-    default=2,
-    help="Number of failed attempts before marking IP as suspicious"
-)
+def main():
+    print("Cyber Log Analyzer started successfully")
 
-args = parser.parse_args()
+    parser = argparse.ArgumentParser(description="Cybersecurity Log Analyzer")
 
-# Detection logic
-ips = get_failed_login_ips()
-attackers = detect_bruteforce(ips, threshold=args.threshold)
+    parser.add_argument(
+        "--threshold",
+        type=int,
+        default=3,
+        help="Failed attempts before alert"
+    )
 
-print(f"\n🚨 Brute-Force Attackers Detected (threshold = {args.threshold}):")
+    parser.add_argument(
+        "--realtime",
+        action="store_true",
+        help="Enable real-time log monitoring"
+    )
 
-if not attackers:
-    print("No suspicious activity detected.")
-else:
-    for ip, attempts in attackers.items():
-        print(f"{ip} → {attempts} failed attempts")
+    args = parser.parse_args()
 
-    # STEP: Save report to CSV
-    report_file = "reports/attack_report.csv"
-    with open(report_file, "w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(["ip_address", "failed_attempts"])
+    if args.realtime:
+        monitor_log_file("logs/auth.log", threshold=args.threshold)
+        return
 
-        for ip, attempts in attackers.items():
-            writer.writerow([ip, attempts])
 
-    print(f"\n📁 Report saved to {report_file}")
+if __name__ == "__main__":
+    main()
