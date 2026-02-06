@@ -1,6 +1,7 @@
 import time
 import re
 from collections import Counter
+from src.geoip import get_ip_details
 from src.alert import send_email_alert
 
 IP_PATTERN = r"\b\d{1,3}(?:\.\d{1,3}){3}\b"
@@ -35,8 +36,18 @@ def monitor_log_file(log_path, threshold=3):
             print(f"❌ Failed login from {ip} (count={failed_ip_counter[ip]})")
 
             # 🚨 ALERT ONLY ONCE
-            if failed_ip_counter[ip] == threshold:
-                if ip not in alerted_ips:
-                    print(f"\n🚨 ALERT: Brute-force attack detected from {ip}!\n")
-                    send_email_alert(ip, failed_ip_counter[ip])
-                    alerted_ips.add(ip)
+           if failed_ip_counter[ip] == threshold:
+    geo = get_ip_details(ip)
+
+    print(f"\n🚨 ALERT: Brute-force attack detected!")
+
+    if geo:
+        print(f"🌍 Country: {geo['country']}")
+        print(f"🏙 City: {geo['city']}")
+        print(f"🏢 ISP: {geo['isp']}")
+        print(f"🛰 ASN: {geo['asn']}")
+        print(f"☁ Hosting Provider: {geo['hosting']}")
+        print(f"🕵 Proxy/VPN: {geo['proxy']}")
+
+        send_email_alert(ip, failed_ip_counter[ip], enrich=geo, classification="Brute-Force Login Attempt", threshold=threshold)
+        alerted_ips.add(ip)
