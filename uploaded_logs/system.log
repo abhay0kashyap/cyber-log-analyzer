@@ -1,0 +1,122 @@
+Feb  7 00:19:01 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.cdscheduler" claims selected messages.
+	Those messages may not appear in standard system log files or in the ASL database.
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.install" claims selected messages.
+	Those messages may not appear in standard system log files or in the ASL database.
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.authd" sharing output destination "/var/log/asl" with ASL Module "com.apple.asl".
+	Output parameters from ASL Module "com.apple.asl" override any specified in ASL Module "com.apple.authd".
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.authd" sharing output destination "/var/log/system.log" with ASL Module "com.apple.asl".
+	Output parameters from ASL Module "com.apple.asl" override any specified in ASL Module "com.apple.authd".
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.authd" claims selected messages.
+	Those messages may not appear in standard system log files or in the ASL database.
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.eventmonitor" claims selected messages.
+	Those messages may not appear in standard system log files or in the ASL database.
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.mail" claims selected messages.
+	Those messages may not appear in standard system log files or in the ASL database.
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.performance" claims selected messages.
+	Those messages may not appear in standard system log files or in the ASL database.
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.iokit.power" claims selected messages.
+	Those messages may not appear in standard system log files or in the ASL database.
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.contacts.ContactsAutocomplete" claims selected messages.
+	Those messages may not appear in standard system log files or in the ASL database.
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.mkb" sharing output destination "/private/var/log/keybagd.log" with ASL Module "com.apple.mkb.internal".
+	Output parameters from ASL Module "com.apple.mkb.internal" override any specified in ASL Module "com.apple.mkb".
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.mkb" claims selected messages.
+	Those messages may not appear in standard system log files or in the ASL database.
+Feb  7 00:36:13 Abhays-MacBook-Air syslogd[365]: Configuration Notice:
+	ASL Module "com.apple.MessageTracer" claims selected messages.
+	Those messages may not appear in standard system log files or in the ASL database.
+Feb  7 00:53:39 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 01:10:37 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 01:27:06 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 01:39:36 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 01:49:38 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 02:00:46 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 02:15:40 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 02:26:44 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 02:37:16 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 02:49:07 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 03:03:08 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 03:13:18 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 03:23:19 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 03:35:26 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 03:48:13 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 03:58:21 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 04:10:43 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 04:25:26 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 04:35:28 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 04:45:49 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 05:05:25 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 05:22:36 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 05:41:01 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 05:56:55 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 06:13:03 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 06:30:10 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 06:45:19 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 07:07:49 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 07:25:44 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 07:41:05 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 07:51:06 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 08:06:46 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 08:23:27 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 08:39:05 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 08:51:48 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 09:09:24 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 09:26:59 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 09:43:06 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 10:10:35 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 10:27:13 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 10:43:13 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 10:53:49 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 11:12:57 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 11:28:25 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 11:46:35 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 12:09:39 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 12:20:48 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 12:32:26 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 12:55:30 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 13:07:24 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 13:24:05 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 13:37:15 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 13:54:00 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 14:13:56 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 14:24:44 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 14:34:49 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 14:45:12 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 14:55:18 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 15:11:36 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 15:29:01 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 15:43:45 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 15:53:56 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 16:04:16 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 16:14:21 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 16:28:27 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 16:47:39 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 17:03:24 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 17:19:36 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 17:30:18 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 17:46:04 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 17:57:09 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 18:13:16 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 18:23:32 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 18:35:05 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 18:55:36 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 19:08:36 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 19:27:14 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 19:37:26 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 19:47:48 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 19:57:55 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics
+Feb  7 20:08:04 Abhays-MacBook-Air syslogd[365]: ASL Sender Statistics

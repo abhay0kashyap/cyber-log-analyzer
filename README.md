@@ -1,119 +1,296 @@
-# 🛡️ Cyber Log Analyzer
+# Cyber Log Analyzer - SIEM System
 
-Hi there! Welcome to **Cyber Log Analyzer**.
+A professional Security Information and Event Management (SIEM) system for detecting and analyzing SSH brute-force attacks with a modern web dashboard.
 
-This is a custom-built security tool designed to protect Linux servers from **Brute-Force SSH Attacks**. If you've ever wondered who is trying to guess your server passwords or where those attacks are coming from, this tool is for you.
+## 🛡️ Features
 
-It works by monitoring your system logs in real-time. When it detects someone trying to break in (by failing to login multiple times), it doesn't just alert you—it investigates them. It pulls their location, ISP, and even checks if they are using a VPN or Proxy, then sends all that intel directly to your email.
+### Backend (FastAPI)
+- **Real-time Log Monitoring**: Continuously monitors auth.log for failed login attempts
+- **Attack Detection**: Identifies brute-force attacks based on configurable thresholds
+- **Geo-IP Enrichment**: Automatically enriches attack data with location, ISP, ASN, proxy/VPN detection
+- **SQLite Database**: Stores security events, alerts, and attacker intelligence
+- **RESTful API**: Full API for frontend integration with real-time data access
+- **Email Alerts**: Configurable email notifications for detected attacks
+- **Report Export**: CSV export of attack reports
 
----
-
-## ✨ What Can It Do?
-
-Here is why this tool is useful:
-
-- **👀 Watch Logs Live**: It tails your `auth.log` file continuously, so it catches attacks the moment they happen.
-- **🚨 Smart Detection**: It counts failed login attempts. If an IP fails too many times (you choose the limit), it triggers an alarm.
-- **🌍 Geo-Location Tracking**: It instantly finds out where the attacker is located (Country, City, Coordinates) and generates a **Google Maps link** for you.
-- **🕵️ VPN & Proxy Detection**: It checks if the attacker is hiding behind a proxy or cloud hosting provider.
-- **📧 Instant Email Alerts**: You get a detailed report in your inbox immediately.
-- **📝 History Logging**: Every attack is saved to a CSV file (`logs/attacks.csv`) so you can analyze trends later.
-- **🧪 Safe Simulation**: Includes a built-in simulator so you can test the alerts without needing a real hacker to attack you.
-
----
-
-## 🛠️ How to Set It Up
-
-Follow these steps to get it running on your machine.
-
-### 1. Get the Code
-First, clone this repository to your local machine:
-```bash
-git clone https://github.com/yourusername/cyber-log-analyzer.git
-cd cyber-log-analyzer
-```
-
-### 2. Install Dependencies
-Ensure you have Python 3 installed. Then install the required packages:
-```bash
-pip install requests python-dotenv
-```
-
-### 3. Configure Environment Variables
-Create a `.env` file in the project root to store your email credentials securely:
-
-```ini
-# .env
-SENDER_EMAIL=your_email@gmail.com
-APP_PASSWORD=your_google_app_password
-RECEIVER_EMAIL=admin_email@example.com
-```
-> **Note:** If using Gmail, you must generate an App Password instead of using your regular login password.
-
-### 4. Prepare Log Directory
-Ensure the logs directory exists (or point the tool to your system's `/var/log/auth.log`):
-```bash
-mkdir -p logs
-touch logs/auth.log
-```
-
----
-
-## 🖥️ Usage
-
-### 📡 Real-Time Monitoring (Recommended)
-Start the monitor to watch for new attacks live:
-```bash
-python main.py --realtime --threshold 3
-```
-- **`--threshold`**: Number of failed attempts before triggering an alert (default: 3).
-
-### 📂 Batch Analysis
-Analyze the existing log file for past attacks without monitoring:
-```bash
-python main.py --threshold 5
-```
-
----
-
-## 🧪 Testing & Simulation
-
-You can safely test the system without waiting for a real attack.
-
-1. **Start the Monitor** in one terminal:
-   ```bash
-   python main.py --realtime
-   ```
-
-2. **Run the Simulation Script** in a second terminal:
-   ```bash
-   python simulate_real_attack.py
-   ```
-   
-   **Options:**
-   - **Mode 1 (My IP):** Fetches your public IP and logs failed attempts. Useful for testing ISP location accuracy.
-   - **Mode 2 (Random Global IP):** Uses random IPs (e.g., from Russia, China, US) to test map links and country detection.
-
----
+### Frontend (React Dashboard)
+- **SIEM-style Dashboard**: Professional dark-themed security dashboard
+- **Real-time Stats**: Live counters for events, attacks, unique IPs, and active alerts
+- **Interactive Charts**: Visualize attack trends and top attacking countries
+- **Events Log**: Complete security events history with filtering
+- **Alerts Management**: View, acknowledge, and manage security alerts
+- **Attacker Intelligence**: Detailed IP information including geo-location, ISP, proxy status
+- **Auto-refresh**: 5-second auto-refresh for real-time monitoring feel
+- **Responsive Design**: Works on desktop and mobile devices
 
 ## 📂 Project Structure
 
 ```
 cyber-log-analyzer/
-├── main.py                  # Entry point for the application
-├── simulate_real_attack.py  # Script to generate fake attack logs
-├── .env                     # Configuration file (not committed)
+├── backend/
+│   ├── app/
+│   │   └── main.py           # FastAPI backend application
+│   ├── requirements.txt       # Backend dependencies
+│   └── README.md            # Backend documentation
+│
+├── webapp/
+│   ├── public/
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── Dashboard.tsx # Main dashboard component
+│   │   │   ├── Dashboard.css # Dashboard styles
+│   │   │   └── index.ts      # Page exports
+│   │   ├── services/
+│   │   │   └── api.ts        # API service layer
+│   │   ├── App.tsx           # Main React app
+│   │   ├── index.tsx         # Entry point
+│   │   └── index.css         # Global styles
+│   ├── package.json          # Frontend dependencies
+│   └── README.md            # Frontend documentation
+│
+├── src/                      # Core Python modules
+│   ├── parser.py            # Log parsing utilities
+│   ├── detector.py          # Attack detection logic
+│   ├── geoip.py             # IP geolocation
+│   ├── alert.py             # Email notifications
+│   ├── csv_logger.py        # CSV logging
+│   └── realtime_monitor.py  # Real-time monitoring
+│
 ├── logs/
-│   ├── auth.log             # Target log file
-│   └── attacks.csv          # History of detected attacks
-└── src/
-    ├── alert.py             # Email notification logic
-    ├── csv_logger.py        # CSV logging logic
-    ├── detector.py          # Batch detection logic
-    ├── geoip.py             # IP geolocation API integration
-    ├── parser.py            # Log parsing utilities
-    └── realtime_monitor.py  # Real-time monitoring engine
+│   ├── auth.log             # Log file to monitor
+│   └── attacks.csv          # Attack history
+│
+├── reports/                 # Generated reports
+├── uploaded_logs/           # Uploaded log files
+├── main.py                  # CLI entry point
+├── api.py                   # Original API
+├── app.py                   # Original Flask app
+└── README.md                # This file
 ```
 
-## ⚠️ Disclaimer
-This tool is intended for **educational and defensive purposes only**. Ensure you have permission to monitor the logs and network traffic on the system where this is installed.
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.8+
+- Node.js 14+ and npm
+- Git
+
+### 1. Clone and Setup
+
+```bash
+git clone https://github.com/yourusername/cyber-log-analyzer.git
+cd cyber-log-analyzer
+```
+
+### 2. Backend Setup
+
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install backend dependencies
+pip install -r backend/requirements.txt
+
+# Install core dependencies
+pip install requests python-dotenv
+```
+
+### 3. Frontend Setup
+
+```bash
+cd webapp
+
+# Install dependencies
+npm install
+
+# Create environment file
+echo "REACT_APP_API_URL=http://localhost:8000" > .env
+```
+
+### 4. Configure Email Alerts (Optional)
+
+Create a `.env` file in the project root:
+
+```env
+SENDER_EMAIL=your_email@gmail.com
+APP_PASSWORD=your_google_app_password
+RECEIVER_EMAIL=admin@example.com
+```
+
+> **Note**: For Gmail, use an App Password instead of your regular password.
+
+## 🖥️ Running the Application
+
+### Terminal 1: Start the Backend
+
+```bash
+# From project root
+cd backend
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+The API will be available at:
+- **API**: http://localhost:8000
+- **Docs**: http://localhost:8000/docs
+
+### Terminal 2: Start the Frontend
+
+```bash
+cd webapp
+npm start
+```
+
+The dashboard will open at: http://localhost:3000
+
+## 📡 API Endpoints
+
+### Health & Status
+- `GET /api/health` - Health check
+- `GET /api/monitor/status` - Monitor status
+
+### Monitor Control
+- `POST /api/monitor/start?threshold=3` - Start real-time monitoring
+- `POST /api/monitor/stop` - Stop monitoring
+- `POST /api/analyze?threshold=3` - Analyze log file
+
+### Events
+- `GET /api/events` - Get all events with filters
+- `GET /api/events/stats` - Event statistics
+
+### Alerts
+- `GET /api/alerts` - Get alerts (active_only=true by default)
+- `POST /api/alerts/{id}/acknowledge` - Acknowledge alert
+
+### Intelligence
+- `GET /api/intelligence` - Get attacker intelligence
+- `GET /api/intelligence/{ip}` - Get IP details
+
+### Dashboard
+- `GET /api/stats` - Dashboard statistics
+
+### Reports
+- `GET /api/reports/export` - Export attack report (CSV)
+
+## 🎮 Usage
+
+### 1. Real-Time Monitoring
+
+1. Open the dashboard at http://localhost:3000
+2. Click "Start Monitor" to begin real-time monitoring
+3. Set the threshold (default: 3 failed attempts)
+4. Watch for attacks as they happen!
+
+### 2. Batch Analysis
+
+Click "Analyze Logs" to analyze the existing auth.log file without real-time monitoring.
+
+### 3. View Events & Alerts
+
+- Navigate to the **Events** tab to see all security events
+- Navigate to the **Alerts** tab to see active alerts
+- Click "Acknowledge" when you've reviewed an alert
+
+### 4. Attacker Intelligence
+
+Navigate to the **Intelligence** tab to see:
+- Total attack attempts per IP
+- Geo-location information
+- ISP/ASN details
+- Proxy/VPN detection
+- Hosting provider identification
+
+## 🧪 Testing
+
+### Simulate Attacks
+
+Use the simulation script to test the system:
+
+```bash
+# Terminal 1: Start monitoring
+python main.py --realtime --threshold 3
+
+# Terminal 2: Run simulation
+python simulate_real_attack.py
+```
+
+## 🔧 Configuration
+
+### Threshold Settings
+
+The threshold determines how many failed login attempts trigger an alert:
+- **Low (1-2)**: Very sensitive, many alerts
+- **Medium (3-5)**: Balanced (recommended)
+- **High (10+)**: Only severe attacks
+
+### Email Notifications
+
+Configure email alerts in `.env`:
+```env
+SENDER_EMAIL=alerts@example.com
+APP_PASSWORD=your_app_password
+RECEIVER_EMAIL=admin@example.com
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+```
+
+## 🛡️ Security Features
+
+1. **Brute-Force Detection**: Detects repeated failed login attempts
+2. **Geo-IP Enrichment**: Identifies attack origins worldwide
+3. **Proxy/VPN Detection**: Flags anonymized connections
+4. **Hosting Detection**: Identifies attacks from cloud providers
+5. **Email Alerts**: Instant notifications for critical attacks
+6. **Threat Level Assessment**: Categorizes attackers by risk level
+
+## 📊 Database Schema
+
+### Tables
+- **security_events**: Individual failed login attempts
+- **alerts**: Active security alerts
+- **attacker_intelligence**: Aggregated attacker data
+
+### Event Types
+- `failed_login`: Individual failed login attempt
+- `attack_detected`: Confirmed attack pattern
+
+### Alert Severities
+- `low`: Minor suspicious activity
+- `medium`: Standard attack detected
+- `high`: Significant attack
+- `critical`: Severe attack requiring immediate attention
+
+## 🐳 Docker (Optional)
+
+```dockerfile
+# Backend
+FROM python:3.9
+WORKDIR /app
+COPY backend/requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with FastAPI and React
+- IP Geolocation provided by IP-API.com
+- Inspired by modern SIEM solutions
+
+---
+
+**🛡️ Cyber Log Analyzer - Protect Your Systems**
+
