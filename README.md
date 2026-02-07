@@ -1,6 +1,6 @@
 # Cyber Log Analyzer - SIEM System
 
-A professional Security Information and Event Management (SIEM) system for detecting and analyzing SSH brute-force attacks with a modern web dashboard.
+A professional Security Information and Event Management (SIEM) system designed for real-time detection, analysis, and visualization of SSH brute-force attacks. It features a robust FastAPI backend for data processing and a modern React dashboard for intuitive monitoring.
 
 ## 🛡️ Features
 
@@ -8,10 +8,10 @@ A professional Security Information and Event Management (SIEM) system for detec
 - **Real-time Log Monitoring**: Continuously monitors auth.log for failed login attempts
 - **Attack Detection**: Identifies brute-force attacks based on configurable thresholds
 - **Geo-IP Enrichment**: Automatically enriches attack data with location, ISP, ASN, proxy/VPN detection
-- **SQLite Database**: Stores security events, alerts, and attacker intelligence
+- **Persistent Storage**: Uses SQLite to store security events, alerts, and comprehensive attacker intelligence
 - **RESTful API**: Full API for frontend integration with real-time data access
 - **Email Alerts**: Configurable email notifications for detected attacks
-- **Report Export**: CSV export of attack reports
+- **Report Export**: Allows exporting attacker intelligence data to CSV for further analysis
 
 ### Frontend (React Dashboard)
 - **SIEM-style Dashboard**: Professional dark-themed security dashboard
@@ -20,7 +20,7 @@ A professional Security Information and Event Management (SIEM) system for detec
 - **Events Log**: Complete security events history with filtering
 - **Alerts Management**: View, acknowledge, and manage security alerts
 - **Attacker Intelligence**: Detailed IP information including geo-location, ISP, proxy status
-- **Auto-refresh**: 5-second auto-refresh for real-time monitoring feel
+- **Real-time Updates**: 5-second auto-refresh for a dynamic, real-time monitoring experience
 - **Responsive Design**: Works on desktop and mobile devices
 
 ## 📂 Project Structure
@@ -63,8 +63,9 @@ cyber-log-analyzer/
 ├── reports/                 # Generated reports
 ├── uploaded_logs/           # Uploaded log files
 ├── main.py                  # CLI entry point
-├── api.py                   # Original API
-├── app.py                   # Original Flask app
+├── api.py                   # (Legacy) Original API - not actively used in current setup
+├── index.html               # Simple client-side HTML frontend for Flask API
+├── app.py                   # Simple Flask API for basic dashboard (alternative to full SIEM)
 └── README.md                # This file
 ```
 
@@ -293,4 +294,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **🛡️ Cyber Log Analyzer - Protect Your Systems**
-
