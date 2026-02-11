@@ -8,12 +8,12 @@ import os
 import sys
 import csv
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from collections import Counter
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from fastapi import FastAPI, HTTPException, Query, BackgroundTasks, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,13 +23,13 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, F
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 import uvicorn
+import re
 
 # Import existing log analysis modules
 from src.parser import get_failed_login_ips
 from src.detector import detect_bruteforce
 from src.geoip import get_ip_details as get_ip_info
 from src.alert import send_email_alert as send_alert_email
-from src.csv_logger import log_attack_to_csv as log_attack
 
 # ============================================================================
 # DATABASE SETUP
@@ -176,7 +176,8 @@ async def monitor_logs_background(threshold: int = 3):
     Monitors the auth.log file and detects attacks.
     """
     global monitoring_active
-    log_file = "logs/auth.log"
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    log_file = os.path.join(base_dir, "logs", "auth.log")
     last_position = 0
     
     print(f"🔍 Starting real-time monitoring (threshold: {threshold})")
@@ -189,46 +190,44 @@ async def monitor_logs_background(threshold: int = 3):
                     new_lines = f.readlines()
                     last_position = f.tell()
                     
-                    for line in new_lines:
-                        if "Failed password" in line:
-                            # Extract IP from log line
-                            import re
-                            ip_pattern = r"\b\d{1,3}(?:\.\d{1,3}){3}\b"
-                            match = re.search(ip_pattern, line)
-                            
-                            if match:
-                                ip = match.group()
-                                await process_failed_login(ip, line)
-                
-                # Check for attacks periodically
-                db = SessionLocal()
-                try:
-                    recent_events = db.query(SecurityEvent).filter(
-                        SecurityEvent.ip_address.in_(
-                            db.query(SecurityEvent.ip_address)
-                            .filter(SecurityEvent.timestamp > datetime.now())
-                        )
-                    ).all()
-                    
-                    # Simple attack detection
-                    ip_counts = Counter([e.ip_address for e in recent_events])
-                    for ip, count in ip_counts.items():
-                        if count >= threshold:
-                            await create_alert_if_needed(db, ip, count)
-                finally:
-                    db.close()
+                    if not new_lines: # Optimization: if no new lines, skip DB session creation
+                        await asyncio.sleep(2) # Wait before checking again
+                        continue # Continue to next iteration of while loop
+
+                    db = SessionLocal() # Create session once per loop iteration
+                    try:
+                        for line in new_lines:
+                            if "Failed password" in line:
+                                # Extract IP from log line
+                                ip_pattern = r"\b\d{1,3}(?:\.\d{1,3}){3}\b"
+                                match = re.search(ip_pattern, line)
+                                
+                                if match:
+                                    ip = match.group()
+                                    await process_failed_login(ip, line, db) # Pass db session
+                        
+                        # After processing all new lines, check for alerts based on updated intelligence
+                        # Query AttackerIntelligence for IPs that have met the threshold and don't have an active alert
+                        ips_to_check_for_alerts = db.query(AttackerIntelligence).filter(
+                            AttackerIntelligence.total_attempts >= threshold,
+                            ~AttackerIntelligence.ip_address.in_(
+                                db.query(Alert.source_ip).filter(Alert.is_active == True)
+                            )
+                        ).all()
+
+                        for intel in ips_to_check_for_alerts:
+                            await create_alert_if_needed(db, intel.ip_address, intel.total_attempts)
+                    finally:
+                        db.close() # Close session after loop iteration
                     
         except Exception as e:
             print(f"Monitor error: {e}")
         
         await asyncio.sleep(2)  # Check every 2 seconds
 
-async def process_failed_login(ip: str, raw_log: str, db: Session = None):
+async def process_failed_login(ip: str, raw_log: str, db: Session):
     """Process a failed login attempt"""
-    close_db = False
-    if db is None:
-        db = SessionLocal()
-        close_db = True
+    # db session is now always passed in and managed by the caller (monitor_logs_background)
     
     try:
         # Get geo-ip information
@@ -277,9 +276,9 @@ async def process_failed_login(ip: str, raw_log: str, db: Session = None):
             db.add(intel)
         
         db.commit()
-    finally:
-        if close_db:
-            db.close()
+    except Exception as e:
+        db.rollback()
+        print(f"Error processing failed login for IP {ip}: {e}")
 
 async def create_alert_if_needed(db: Session, ip: str, attempts: int):
     """Create an alert if one doesn't already exist"""
@@ -582,7 +581,8 @@ async def analyze_log_file(
 async def run_batch_analysis(threshold: int):
     """Run batch log analysis"""
     # Use absolute path from project root
-    log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "logs", "auth.log")
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    log_path = os.path.join(base_dir, "logs", "auth.log")
     db = SessionLocal()
     try:
         ips = get_failed_login_ips(log_path)
@@ -593,7 +593,7 @@ async def run_batch_analysis(threshold: int):
             if not ip_info:
                 ip_info = {}
             
-            # Create event
+            # Create nkevent
             event = SecurityEvent(
                 event_type="attack_detected",
                 ip_address=ip,
@@ -703,4 +703,3 @@ if __name__ == "__main__":
     - GET  /api/reports/export      - Export report
     """)
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

@@ -1,9 +1,14 @@
 /**
- * Cyber Log Analyzer - API Service
- * Handles all API communication with the backend
+ * Cyber Log Analyzer – API Service
+ * Centralized API layer for frontend ↔ backend communication
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+
+/* ===============================
+   Types
+================================ */
 
 export interface Event {
   id: number;
@@ -41,10 +46,10 @@ export interface Intelligence {
   city?: string;
   isp?: string;
   asn?: string;
-  is_proxy: boolean;
-  is_hosting: boolean;
   latitude?: number;
   longitude?: number;
+  is_proxy: boolean;
+  is_hosting: boolean;
   threat_level: string;
 }
 
@@ -56,139 +61,181 @@ export interface Stats {
   events_today: number;
   attacks_today: number;
   top_countries: { country: string; count: number }[];
-  recent_activity: { timestamp: string; type: string; ip: string; country?: string }[];
+  recent_activity: {
+    timestamp: string;
+    type: string;
+    ip: string;
+    country?: string;
+  }[];
 }
 
 export interface MonitorStatus {
   is_running: boolean;
 }
 
+/* ===============================
+   Helper
+================================ */
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "API request failed");
+  }
+  return response.json();
+}
+
+/* ===============================
+   API Service
+================================ */
+
 class ApiService {
   private baseUrl = API_BASE_URL;
 
-  // Health Check
-  async healthCheck(): Promise<{ status: string; monitoring_active: boolean }> {
-    const response = await fetch(`${this.baseUrl}/api/health`);
-    return response.json();
-  }
-
-  // Events
-  async getEvents(params?: { 
-    event_type?: string; 
-    ip?: string; 
-    limit?: number; 
-    offset?: number 
-  }): Promise<Event[]> {
-    const queryParams = new URLSearchParams();
-    if (params?.event_type) queryParams.append('event_type', params.event_type);
-    if (params?.ip) queryParams.append('ip', params.ip);
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.offset) queryParams.append('offset', params.offset.toString());
-
-    const response = await fetch(
-      `${this.baseUrl}/api/events?${queryParams.toString()}`
+  /* ---------- Health ---------- */
+  healthCheck() {
+    return fetch(`${this.baseUrl}/api/health`).then((r) =>
+      handleResponse<{ status: string; monitoring_active: boolean }>(r)
     );
-    return response.json();
   }
 
-  async getEventsStats(): Promise<{
-    total_events: number;
-    events_today: number;
-    top_attacking_ips: { ip: string; count: number }[];
-  }> {
-    const response = await fetch(`${this.baseUrl}/api/events/stats`);
-    return response.json();
-  }
+  /* ---------- Events ---------- */
+  getEvents(params?: {
+    event_type?: string;
+    ip?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    const query = new URLSearchParams();
 
-  // Alerts
-  async getAlerts(params?: { active_only?: boolean; severity?: string }): Promise<Alert[]> {
-    const queryParams = new URLSearchParams();
-    if (params?.active_only !== undefined) 
-      queryParams.append('active_only', params.active_only.toString());
-    if (params?.severity) queryParams.append('severity', params.severity);
+    if (params?.event_type) query.append("event_type", params.event_type);
+    if (params?.ip) query.append("ip", params.ip);
+    if (params?.limit) query.append("limit", String(params.limit));
+    if (params?.offset) query.append("offset", String(params.offset));
 
-    const response = await fetch(
-      `${this.baseUrl}/api/alerts?${queryParams.toString()}`
+    return fetch(`${this.baseUrl}/api/events?${query}`).then((r) =>
+      handleResponse<Event[]>(r)
     );
-    return response.json();
   }
 
-  async acknowledgeAlert(alertId: number): Promise<{ message: string }> {
-    const response = await fetch(`${this.baseUrl}/api/alerts/${alertId}/acknowledge`, {
-      method: 'POST',
-    });
-    return response.json();
+  getEventsStats() {
+    return fetch(`${this.baseUrl}/api/events/stats`).then((r) =>
+      handleResponse<{
+        total_events: number;
+        events_today: number;
+        top_attacking_ips: { ip: string; count: number }[];
+      }>(r)
+    );
   }
 
-  // Intelligence
-  async getIntelligence(limit?: number): Promise<Intelligence[]> {
-    const url = limit 
+  /* ---------- Alerts ---------- */
+  getAlerts(params?: { active_only?: boolean; severity?: string }) {
+    const query = new URLSearchParams();
+
+    if (params?.active_only !== undefined)
+      query.append("active_only", String(params.active_only));
+    if (params?.severity) query.append("severity", params.severity);
+
+    return fetch(`${this.baseUrl}/api/alerts?${query}`).then((r) =>
+      handleResponse<Alert[]>(r)
+    );
+  }
+
+  acknowledgeAlert(alertId: number) {
+    return fetch(
+      `${this.baseUrl}/api/alerts/${alertId}/acknowledge`,
+      { method: "POST" }
+    ).then((r) => handleResponse<{ message: string }>(r));
+  }
+
+  /* ---------- Intelligence ---------- */
+  getIntelligence(limit?: number) {
+    const url = limit
       ? `${this.baseUrl}/api/intelligence?limit=${limit}`
       : `${this.baseUrl}/api/intelligence`;
-    const response = await fetch(url);
-    return response.json();
+
+    return fetch(url).then((r) =>
+      handleResponse<Intelligence[]>(r)
+    );
   }
 
-  async getIpDetails(ip: string): Promise<{
-    ip: string;
-    cached: boolean;
-    country?: string;
-    city?: string;
-    isp?: string;
-    asn?: string;
-    latitude?: number;
-    longitude?: number;
-    is_proxy?: boolean;
-    is_hosting?: boolean;
-    map_url?: string;
-  }> {
-    const response = await fetch(`${this.baseUrl}/api/intelligence/${ip}`);
-    return response.json();
+  getIpDetails(ip: string) {
+    return fetch(`${this.baseUrl}/api/intelligence/${ip}`).then((r) =>
+      handleResponse<{
+        ip: string;
+        cached: boolean;
+        country?: string;
+        city?: string;
+        isp?: string;
+        asn?: string;
+        latitude?: number;
+        longitude?: number;
+        is_proxy?: boolean;
+        is_hosting?: boolean;
+        map_url?: string;
+      }>(r)
+    );
   }
 
-  // Dashboard Stats
-  async getStats(): Promise<Stats> {
-    const response = await fetch(`${this.baseUrl}/api/stats`);
-    return response.json();
+  /* ---------- Dashboard ---------- */
+  getStats() {
+    return fetch(`${this.baseUrl}/api/stats`).then((r) =>
+      handleResponse<Stats>(r)
+    );
   }
 
-  // Monitor Control
-  async startMonitoring(threshold?: number): Promise<MonitorStatus> {
-    const url = threshold 
+  /* ---------- Monitor ---------- */
+  startMonitoring(threshold?: number) {
+    const url = threshold
       ? `${this.baseUrl}/api/monitor/start?threshold=${threshold}`
       : `${this.baseUrl}/api/monitor/start`;
-    const response = await fetch(url, { method: 'POST' });
-    return response.json();
+
+    return fetch(url, { method: "POST" }).then((r) =>
+      handleResponse<MonitorStatus>(r)
+    );
   }
 
-  async stopMonitoring(): Promise<MonitorStatus> {
-    const response = await fetch(`${this.baseUrl}/api/monitor/stop`, {
-      method: 'POST',
-    });
-    return response.json();
+  stopMonitoring() {
+    return fetch(`${this.baseUrl}/api/monitor/stop`, {
+      method: "POST",
+    }).then((r) => handleResponse<MonitorStatus>(r));
   }
 
-  async getMonitorStatus(): Promise<MonitorStatus> {
-    const response = await fetch(`${this.baseUrl}/api/monitor/status`);
-    return response.json();
+  getMonitorStatus() {
+    return fetch(`${this.baseUrl}/api/monitor/status`).then((r) =>
+      handleResponse<MonitorStatus>(r)
+    );
   }
 
-  // Analysis
-  async analyzeLogFile(threshold?: number): Promise<{ message: string; threshold: number }> {
-    const url = threshold 
+  /* ---------- Analysis ---------- */
+  analyzeLogFile(threshold?: number) {
+    const url = threshold
       ? `${this.baseUrl}/api/analyze?threshold=${threshold}`
       : `${this.baseUrl}/api/analyze`;
-    const response = await fetch(url, { method: 'POST' });
-    return response.json();
+
+    return fetch(url, { method: "POST" }).then((r) =>
+      handleResponse<{ message: string; threshold: number }>(r)
+    );
   }
 
-  // Reports
+  /* ---------- Reports ---------- */
   async exportReport(): Promise<Blob> {
-    const response = await fetch(`${this.baseUrl}/api/reports/export`);
+    const response = await fetch(
+      `${this.baseUrl}/api/reports/export`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to export report");
+    }
+
     return response.blob();
   }
 }
 
-export const api = new ApiService();
-export default api;
+/* ===============================
+   Export
+================================ */
 
+const api = new ApiService();
+export default api;
+export { api };
