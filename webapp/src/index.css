@@ -1,31 +1,53 @@
-:root {
-  --bg-main: #0b1220;
-  --bg-card: #111827;
-  --border: #1f2937;
-  --primary: #3b82f6;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --text-main: #e5e7eb;
-  --text-muted: #9ca3af;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base */
+    --background: #020617;
+    --panels-cards: #0f172a;
+    --borders: #1e293b;
+
+    /* Semantic */
+    --critical-high: #ef4444;
+    --warning-medium: #f59e0b;
+    --info-neutral: #38bdf8;
+    --success-safe: #22c55e;
+    --accent-intelligence: #a855f7;
+
+    /* Text */
+    --text-primary: #e5e7eb;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+  }
+
+  body {
+    @apply bg-background text-text-primary;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
 }
 
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background-color: var(--bg-main);
-  color: var(--text-main);
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-h1, h2, h3 {
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
+@layer components {
+  .stat-card-info {
+    border-left-color: var(--info-neutral);
+  }
+  .stat-card-critical {
+    border-left-color: var(--critical-high);
+  }
+  .stat-card-warning {
+    border-left-color: var(--warning-medium);
+  }
+  .stat-card-accent {
+    border-left-color: var(--accent-intelligence);
+  }
+  .stat-card-success {
+    border-left-color: var(--success-safe);
+  }
 }

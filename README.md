@@ -38,7 +38,6 @@ cyber-log-analyzer/
 │   ├── src/
 │   │   ├── pages/
 │   │   │   ├── Dashboard.tsx # Main dashboard component
-│   │   │   ├── Dashboard.css # Dashboard styles
 │   │   │   └── index.ts      # Page exports
 │   │   ├── services/
 │   │   │   └── api.ts        # API service layer

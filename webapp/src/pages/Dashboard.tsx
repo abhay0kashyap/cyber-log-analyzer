@@ -1,98 +1,131 @@
 import React, { useEffect, useState } from "react";
-import api, { Stats, Alert as AlertType } from "../services/api";
-import StatCard from "../components/ui/StatCard";
-import "./Dashboard.css";
+import MainLayout from "../layout/MainLayout";
+import api from "../services/api";
+
+interface Stats {
+  total_events: number;
+  total_attacks: number;
+  unique_ips: number;
+  active_alerts: number;
+}
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<Stats | null>(null);
-  const [alerts, setAlerts] = useState<AlertType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
-        const [statsData, alertsData] = await Promise.all([
-          api.getStats(),
-          api.getAlerts({ active_only: true }),
-        ]);
-
+        const statsData = await api.getStats();
+        const alertsData = await api.getAlerts({ active_only: true });
         setStats(statsData);
         setAlerts(alertsData);
-        setError(null);
       } catch (err) {
-        setError("Failed to fetch data from backend. Is it running?");
-      } finally {
-        setLoading(false);
+        console.error(err);
       }
     };
 
-    fetchData();
+    loadData();
   }, []);
 
-  if (loading) return <p className="status-text">Loading dashboard…</p>;
-  if (error) return <p className="error-text">{error}</p>;
-  if (!stats) return null;
-
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <h1>Cyber Log Analyzer</h1>
-        <p>SIEM-style Security Monitoring Dashboard</p>
-        <span className="backend-status online">● Backend Connected</span>
-      </header>
+    <MainLayout>
+      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+        <h1 style={{ marginBottom: "30px" }}>Security Overview</h1>
 
-      {/* Stats Grid */}
-      <section className="stats-grid">
-        <StatCard
-          title="Total Events"
-          value={stats.total_events}
-          icon="📊"
-          accentColor="blue"
-        />
-        <StatCard
-          title="Attacks Detected"
-          value={stats.total_attacks}
-          icon="⚠️"
-          accentColor="red"
-        />
-        <StatCard
-          title="Unique IPs"
-          value={stats.unique_ips}
-          icon="🌐"
-          accentColor="purple"
-        />
-        <StatCard
-          title="Active Alerts"
-          value={stats.active_alerts}
-          icon="🚨"
-          accentColor="orange"
-        />
-      </section>
+        {/* ===== STATS GRID ===== */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "20px",
+            marginBottom: "40px",
+          }}
+        >
+          <StatCard title="Total Events" value={stats?.total_events} />
+          <StatCard title="Attacks Detected" value={stats?.total_attacks} />
+          <StatCard title="Unique IPs" value={stats?.unique_ips} />
+          <StatCard title="Active Alerts" value={stats?.active_alerts} />
+        </div>
 
-      {/* Alerts Section */}
-      <section className="alerts-section">
-        <h2>🚨 Active Alerts</h2>
+        {/* ===== ALERTS SECTION ===== */}
+        <div>
+          <h2 style={{ marginBottom: "20px" }}>Active Alerts</h2>
 
-        {alerts.length === 0 && (
-          <p className="muted">No active alerts 🎉</p>
-        )}
+          <div
+            style={{
+              background: "#111827",
+              borderRadius: "10px",
+              padding: "20px",
+            }}
+          >
+            {alerts.length === 0 && (
+              <p style={{ color: "#9ca3af" }}>No active alerts</p>
+            )}
 
-        {alerts.map((alert) => (
-          <div key={alert.id} className={`alert-card ${alert.severity}`}>
-            <div>
-              <strong>{alert.alert_type}</strong>
-              <p className="muted">{alert.description}</p>
-              <span className="ip">IP: {alert.source_ip}</span>
-            </div>
-            <span className={`severity-badge ${alert.severity}`}>
-              {alert.severity.toUpperCase()}
-            </span>
+            {alerts.map((alert) => (
+              <div
+                key={alert.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  padding: "15px 0",
+                  borderBottom: "1px solid #1f2937",
+                }}
+              >
+                <div>
+                  <strong>{alert.alert_type}</strong>
+                  <p style={{ color: "#9ca3af", margin: 0 }}>
+                    {alert.description}
+                  </p>
+                </div>
+
+                <div
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    background:
+                      alert.severity === "high"
+                        ? "#7f1d1d"
+                        : alert.severity === "medium"
+                        ? "#78350f"
+                        : "#1e3a8a",
+                  }}
+                >
+                  {alert.severity.toUpperCase()}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </section>
-    </div>
+        </div>
+      </div>
+    </MainLayout>
   );
 };
 
 export default Dashboard;
+
+/* ===== STAT CARD COMPONENT ===== */
+
+const StatCard = ({
+  title,
+  value,
+}: {
+  title: string;
+  value?: number;
+}) => {
+  return (
+    <div
+      style={{
+        background: "#111827",
+        padding: "25px",
+        borderRadius: "12px",
+        boxShadow: "0 0 15px rgba(0,0,0,0.3)",
+      }}
+    >
+      <p style={{ color: "#9ca3af", marginBottom: "10px" }}>{title}</p>
+      <h2 style={{ margin: 0 }}>{value ?? 0}</h2>
+    </div>
+  );
+};
