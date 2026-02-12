@@ -1,72 +1,97 @@
-body {
+/* ===== GLOBAL RESET ===== */
+* {
   margin: 0;
-  font-family: "Segoe UI", sans-serif;
-  background: #f3f4f6;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Inter, sans-serif;
 }
 
-/* Layout */
-.layout {
+body {
+  background-color: #f3f4f6;
+}
+
+/* ===== APP LAYOUT ===== */
+.app-layout {
   display: flex;
+  min-height: 100vh;
 }
 
-/* Sidebar */
+/* ===== SIDEBAR ===== */
 .sidebar {
   width: 240px;
-  height: 100vh;
   background: #2f3e46;
   color: white;
-  padding: 25px 15px;
+  padding: 25px 20px;
 }
 
 .logo {
+  font-size: 22px;
+  font-weight: 600;
   margin-bottom: 30px;
 }
 
 .nav-item {
   display: block;
-  padding: 12px 15px;
-  margin-bottom: 8px;
-  border-radius: 8px;
   color: #cbd5e1;
   text-decoration: none;
-  cursor: pointer;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  transition: 0.2s ease;
 }
 
 .nav-item:hover {
-  background: #3a4f57;
-}
-
-.nav-item.active {
-  background: #4a685f;
+  background: #3a4f58;
   color: white;
 }
 
-/* Dashboard */
-.dashboard {
+.nav-item.active {
+  background: #5f7f73;
+  color: white;
+}
+
+/* ===== MAIN CONTENT ===== */
+.content {
   flex: 1;
   padding: 40px;
 }
 
-.page-title {
-  margin-bottom: 30px;
-  color: #374151;
+/* ===== DASHBOARD ===== */
+.dashboard h1 {
+  font-size: 42px;
+  font-weight: 700;
+  margin-bottom: 35px;
+  color: #1f2937;
 }
 
-/* Cards */
-.cards-grid {
+/* ===== CARD GRID ===== */
+.card-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 25px;
+  grid-template-columns: repeat(2, 280px);
+  gap: 30px;
 }
 
+/* ===== STAT CARD ===== */
 .stat-card {
   background: white;
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  transition: 0.25s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
 }
 
 .stat-title {
+  font-size: 14px;
   color: #6b7280;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.stat-card h2 {
+  font-size: 26px;
+  font-weight: 600;
+  color: #111827;
 }

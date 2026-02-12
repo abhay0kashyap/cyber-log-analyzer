@@ -4,9 +4,11 @@ import "./styles.css";
 
 function App() {
   return (
-    <div className="layout">
+    <div className="app-layout">
       <Sidebar />
-      <Dashboard />
+      <div className="content">
+        <Dashboard />
+      </div>
     </div>
   );
 }
