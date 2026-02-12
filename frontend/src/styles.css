@@ -1,0 +1,72 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: #f3f4f6;
+}
+
+/* Layout */
+.layout {
+  display: flex;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background: #2f3e46;
+  color: white;
+  padding: 25px 15px;
+}
+
+.logo {
+  margin-bottom: 30px;
+}
+
+.nav-item {
+  display: block;
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  color: #cbd5e1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: #3a4f57;
+}
+
+.nav-item.active {
+  background: #4a685f;
+  color: white;
+}
+
+/* Dashboard */
+.dashboard {
+  flex: 1;
+  padding: 40px;
+}
+
+.page-title {
+  margin-bottom: 30px;
+  color: #374151;
+}
+
+/* Cards */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 25px;
+}
+
+.stat-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.stat-title {
+  color: #6b7280;
+  margin-bottom: 10px;
+}
