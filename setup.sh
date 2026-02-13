@@ -5,6 +5,8 @@
 
 set -e  # Exit on error
 
+PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
+
 echo "🛡️  Cyber Log Analyzer - SIEM System Setup"
 echo "============================================"
 echo ""
@@ -27,6 +29,8 @@ print_warning() {
 print_error() {
     echo -e "${RED}[✗]${NC} $1"
 }
+
+cd "$PROJECT_ROOT"
 
 # Check Python version
 echo "📋 Checking prerequisites..."
@@ -51,24 +55,29 @@ echo "📁 Creating directories..."
 mkdir -p logs
 mkdir -p reports
 mkdir -p uploaded_logs
+mkdir -p backend/logs
 touch logs/auth.log
+touch backend/logs/auth.log
 print_status "Directories created"
 
 # Setup Backend
 echo ""
 echo "🐍 Setting up Backend..."
-cd "$(dirname "$0")"
+VENV_DIR=".venv"
 
 # Create virtual environment
-if [ ! -d "venv" ]; then
-    python3 -m venv venv
-    print_status "Virtual environment created"
+if [ -d ".venv" ]; then
+    print_status "Virtual environment already exists at .venv"
+elif [ -d "venv" ]; then
+    VENV_DIR="venv"
+    print_warning "Using existing legacy virtual environment at ./venv"
 else
-    print_status "Virtual environment already exists"
+    python3 -m venv .venv
+    print_status "Virtual environment created at .venv"
 fi
 
 # Activate virtual environment
-source venv/bin/activate
+source "$VENV_DIR/bin/activate"
 
 # Install backend dependencies
 echo ""
@@ -81,21 +90,25 @@ print_status "Backend dependencies installed"
 if command -v npm &> /dev/null; then
     echo ""
     echo "⚛️  Setting up Frontend..."
-    cd webapp
-    
-    # Install frontend dependencies
-    npm install
-    print_status "Frontend dependencies installed"
-    
-    # Create environment file
-    if [ ! -f ".env" ]; then
-        echo "REACT_APP_API_URL=http://localhost:8000" > .env
-        print_status "Environment file created"
+    if [ ! -d "frontend" ]; then
+        print_warning "frontend/ directory not found. Skipping frontend setup."
     else
-        print_status "Environment file already exists"
-    fi
+        cd frontend
     
-    cd ..
+        # Install frontend dependencies
+        npm install
+        print_status "Frontend dependencies installed"
+    
+        # Create environment file for Vite if none exists
+        if [ ! -f ".env" ] && [ ! -f ".env.local" ]; then
+            echo "VITE_API_URL=http://127.0.0.1:8000" > .env
+            print_status "Frontend .env file created with VITE_API_URL"
+        else
+            print_status "Frontend env file already exists"
+        fi
+    
+        cd ..
+    fi
 else
     print_warning "Frontend setup skipped (npm not found)"
 fi
@@ -108,16 +121,15 @@ echo "🚀 To start the application:"
 echo ""
 echo "   Terminal 1 - Backend:"
 echo "   cd backend"
-echo "   source venv/bin/activate"
-echo "   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+echo "   source $VENV_DIR/bin/activate"
+echo "   uvicorn main:app --host 127.0.0.1 --port 8000 --reload"
 echo ""
 echo "   Terminal 2 - Frontend:"
-echo "   cd webapp"
-echo "   npm start"
+echo "   cd frontend"
+echo "   npm run dev"
 echo ""
-echo "   Dashboard: http://localhost:3000"
+echo "   Dashboard: http://127.0.0.1:5173"
 echo "   API Docs:  http://localhost:8000/docs"
 echo ""
 echo "📖 See README.md for detailed instructions"
 echo "============================================"
-
