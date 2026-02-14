@@ -10,10 +10,10 @@ function GeoThreatMap({ geoSources }) {
             <div key={`${entry.ip}-${entry.country}`} className="rounded-xl border border-soc-border bg-soc-panelSoft/55 p-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-soc-text">{entry.country} • {entry.city}</p>
-                <span className="text-xs text-soc-muted">Score {entry.attack_score}</span>
+                <span className="text-xs text-soc-muted">Events {entry.count ?? entry.attack_score ?? 0}</span>
               </div>
               <p className="mt-1 text-xs text-soc-muted">
-                {entry.ip} • {entry.lat.toFixed(2)}, {entry.lng.toFixed(2)}
+                {entry.ip} • {(entry.lat ?? 0).toFixed(2)}, {(entry.lon ?? entry.lng ?? 0).toFixed(2)}
               </p>
             </div>
           ))

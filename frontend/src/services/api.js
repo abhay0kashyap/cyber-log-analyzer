@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cyber-log-analyzer-3.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '');
+const WS_BASE_URL = import.meta.env.VITE_WS_URL || '';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -15,13 +16,68 @@ apiClient.interceptors.response.use(
   }
 );
 
+function resolveWsUrl() {
+  if (WS_BASE_URL) {
+    return `${WS_BASE_URL.replace(/\/+$/, '')}/ws/updates`;
+  }
+
+  const base = API_BASE_URL.replace(/\/+$/, '');
+  if (!base) {
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    return `${protocol}://${window.location.host}/ws/updates`;
+  }
+  if (base.startsWith('https://')) {
+    return `${base.replace('https://', 'wss://')}/ws/updates`;
+  }
+  if (base.startsWith('http://')) {
+    return `${base.replace('http://', 'ws://')}/ws/updates`;
+  }
+  return `ws://${base}/ws/updates`;
+}
+
 export const api = {
   getHealth: async () => (await apiClient.get('/health')).data,
+
+  getMetrics: async (range = '24h') => (await apiClient.get('/api/metrics', { params: { range } })).data,
+  getSocAlerts: async (range = '24h') => (await apiClient.get('/api/alerts', { params: { range } })).data,
+  getGeoFeed: async (range = '24h') => (await apiClient.get('/api/geo-feed', { params: { range } })).data,
+
+  uploadLog: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return (
+      await apiClient.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    ).data;
+  },
+
+  connectUpdates: (onUpdate) => {
+    let socket;
+    try {
+      socket = new WebSocket(resolveWsUrl());
+    } catch {
+      return null;
+    }
+
+    socket.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.type === 'metrics_update') {
+          onUpdate?.(payload);
+        }
+      } catch {
+        // Ignore malformed WS payloads.
+      }
+    };
+
+    return socket;
+  },
+
+  // Legacy endpoints retained for existing pages.
   getStats: async () => (await apiClient.get('/stats')).data,
-  getDashboard: async (interval = '24h') =>
-    (await apiClient.get('/stats/dashboard', { params: { interval } })).data,
-  getTimeline: async (interval = '24h') =>
-    (await apiClient.get('/stats/timeline', { params: { interval } })).data,
+  getDashboard: async (interval = '24h') => (await apiClient.get('/stats/dashboard', { params: { interval } })).data,
+  getTimeline: async (interval = '24h') => (await apiClient.get('/stats/timeline', { params: { interval } })).data,
   getTopIps: async () => (await apiClient.get('/stats/top-ips')).data,
   getSeverityBreakdown: async () => (await apiClient.get('/stats/severity-breakdown')).data,
 
@@ -29,16 +85,6 @@ export const api = {
   getAlertDetails: async (alertId) => (await apiClient.get(`/alerts/${alertId}`)).data,
   updateAlertStatus: async (alertId, status) => (await apiClient.patch(`/alerts/${alertId}/status`, { status })).data,
   blockAlert: async (alertId) => (await apiClient.post(`/alerts/${alertId}/block`)).data,
-
-  uploadLog: async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return (
-      await apiClient.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-    ).data;
-  },
 
   getSettings: async () => (await apiClient.get('/settings')).data,
   saveSettings: async (payload) => (await apiClient.post('/settings', payload)).data,
