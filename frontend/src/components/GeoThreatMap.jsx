@@ -1,7 +1,7 @@
 function GeoThreatMap({ geoSources }) {
   return (
     <section className="soc-card p-4">
-      <h3 className="text-sm font-semibold text-soc-text">Geo Threat Feed (Mocked)</h3>
+      <h3 className="text-sm font-semibold text-soc-text">Geo Threat Feed</h3>
       <div className="mt-3 space-y-2">
         {geoSources.length === 0 ? (
           <p className="text-sm text-soc-muted">No geolocation records.</p>

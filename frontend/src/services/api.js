@@ -34,7 +34,7 @@ export const api = {
     const formData = new FormData();
     formData.append('file', file);
     return (
-      await apiClient.post('/logs/upload', formData, {
+      await apiClient.post('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
     ).data;

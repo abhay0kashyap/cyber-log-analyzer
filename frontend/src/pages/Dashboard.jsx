@@ -8,12 +8,57 @@ import TopAttackingIps from '../components/TopAttackingIps';
 import { api } from '../services/api';
 import { SEVERITY_COLORS } from '../utils/severity';
 
+function mapSeverityToDashboard(severity = {}) {
+  return {
+    Critical: Number(severity.critical || 0),
+    High: Number(severity.high || 0),
+    Medium: Number(severity.medium || 0),
+    Low: Number(severity.low || 0),
+  };
+}
+
+function mapTopIps(topIps = []) {
+  return topIps.map((row) => {
+    const count = Number(row.count || 0);
+    return {
+      ip: row.ip,
+      count,
+      attack_score: count,
+      critical_count: 0,
+      high_count: 0,
+      high_risk: false,
+    };
+  });
+}
+
+function mapAlerts(alerts = []) {
+  return alerts.map((alert, index) => ({
+    id: alert.id || `${alert.ip || 'unknown'}-${alert.timestamp || index}-${index}`,
+    timestamp: alert.timestamp || new Date().toISOString(),
+    ip: alert.ip || 'unknown',
+    type: alert.type || 'unknown',
+    severity: alert.severity || 'Low',
+    status: 'New',
+    description: alert.description || 'No description available.',
+  }));
+}
+
+function buildAttackTypeDistribution(alerts = []) {
+  const counts = alerts.reduce((acc, alert) => {
+    const key = alert.type || 'unknown';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  return Object.entries(counts).map(([type, count]) => ({ type, count }));
+}
+
 function Dashboard({ onSyncTick }) {
   const [interval, setIntervalValue] = useState('24h');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [uploadDrivenState, setUploadDrivenState] = useState(false);
   const [payload, setPayload] = useState({
     stats: null,
     severity_distribution: { Critical: 0, High: 0, Medium: 0, Low: 0 },
@@ -39,10 +84,11 @@ function Dashboard({ onSyncTick }) {
   }, [interval, onSyncTick]);
 
   useEffect(() => {
+    if (uploadDrivenState) return;
     loadDashboard(true);
     const timer = setInterval(() => loadDashboard(false), 5000);
     return () => clearInterval(timer);
-  }, [loadDashboard]);
+  }, [loadDashboard, uploadDrivenState]);
 
   const attackTypeData = useMemo(
     () => payload.attack_types.map((item) => ({ name: item.type, value: item.count })),
@@ -60,12 +106,29 @@ function Dashboard({ onSyncTick }) {
 
     try {
       setUploading(true);
+      setError('');
       const response = await api.uploadLog(file);
+
+      const mappedAlerts = mapAlerts(response.alerts || []);
+      setPayload((prev) => ({
+        ...prev,
+        stats: {
+          total_events: Number(response.total_events || 0),
+          windows_events: prev.stats?.windows_events || 0,
+          syslog_events: prev.stats?.syslog_events || 0,
+          all_devices: prev.stats?.all_devices || 0,
+        },
+        severity_distribution: mapSeverityToDashboard(response.severity),
+        top_attacking_ips: mapTopIps(response.top_ips || []),
+        recent_alerts: mappedAlerts.slice(0, 8),
+        attack_types: buildAttackTypeDistribution(mappedAlerts),
+      }));
+
+      setUploadDrivenState(true);
       setMessage(
-        `Ingested ${response.ingested_events} events, generated ${response.generated_alerts} alerts (${response.correlated_alerts} correlated).`
+        `Processed ${file.name}: ${response.total_events || 0} total events, ${mappedAlerts.length} alerts tracked.`
       );
       setTimeout(() => setMessage(''), 4000);
-      loadDashboard(false);
     } catch (err) {
       setError(err.message);
     } finally {
