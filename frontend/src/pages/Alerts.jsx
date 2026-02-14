@@ -5,6 +5,7 @@ import AlertDetailModal from '../components/AlertDetailModal';
 import AlertTable from '../components/AlertTable';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { api } from '../services/api';
+import { buildCsvFilename, downloadTextFile, logsToCsv } from '../utils/csvExport';
 import { SEVERITY_COLORS } from '../utils/severity';
 
 function Alerts({ onSyncTick }) {
@@ -30,6 +31,7 @@ function Alerts({ onSyncTick }) {
   const [busyAlertId, setBusyAlertId] = useState(null);
   const [details, setDetails] = useState(null);
   const [detailsError, setDetailsError] = useState('');
+  const [exportNotice, setExportNotice] = useState('');
 
   const loadAlerts = useCallback(async (isFirst = false) => {
     try {
@@ -70,6 +72,17 @@ function Alerts({ onSyncTick }) {
     [data.severity_counts]
   );
 
+  const filteredLogs = useMemo(
+    () =>
+      data.items.map((alert) => ({
+        timestamp: alert.timestamp,
+        ip: alert.ip,
+        severity: alert.severity,
+        message: alert.description ?? '',
+      })),
+    [data.items]
+  );
+
   const openDetails = async (alertId) => {
     try {
       const payload = await api.getAlertDetails(alertId);
@@ -103,6 +116,22 @@ function Alerts({ onSyncTick }) {
       setBusyAlertId(null);
     }
   };
+
+  const handleExportCsv = useCallback(() => {
+    if (!filteredLogs.length) return;
+    const csv = logsToCsv(filteredLogs);
+    const filename = buildCsvFilename();
+    downloadTextFile(csv, filename);
+    const successMessage = `Exported ${filteredLogs.length} filtered logs to ${filename}`;
+    setExportNotice(successMessage);
+    console.info(successMessage);
+  }, [filteredLogs]);
+
+  useEffect(() => {
+    if (!exportNotice) return;
+    const timer = window.setTimeout(() => setExportNotice(''), 2500);
+    return () => window.clearTimeout(timer);
+  }, [exportNotice]);
 
   return (
     <div className="space-y-4">
@@ -184,6 +213,9 @@ function Alerts({ onSyncTick }) {
       />
 
       <section className="flex flex-wrap gap-2">
+        <button className="soc-button py-1" onClick={handleExportCsv} disabled={filteredLogs.length === 0} type="button">
+          Export CSV
+        </button>
         <label className="text-xs text-soc-muted">
           Page Size
           <select className="soc-input ml-2" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
@@ -197,6 +229,7 @@ function Alerts({ onSyncTick }) {
 
       {error ? <p className="text-sm text-[#ff6a6a]">{error}</p> : null}
       {detailsError ? <p className="text-sm text-[#ff6a6a]">{detailsError}</p> : null}
+      {exportNotice ? <p className="text-sm text-[#7ce38b]">{exportNotice}</p> : null}
 
       <AlertDetailModal data={details} onClose={() => setDetails(null)} />
     </div>
