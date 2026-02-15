@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import TypedDict
 
 
@@ -55,7 +55,8 @@ def _parse_timestamp(line: str) -> datetime:
         clock = syslog_match.group("clock")
         parsed = datetime.strptime(f"{now.year}-{month:02d}-{day:02d} {clock}", "%Y-%m-%d %H:%M:%S")
         parsed = parsed.replace(tzinfo=UTC)
-        if parsed > now:
+        # Only roll back a year when the parsed timestamp is implausibly far in the future.
+        if parsed - now > timedelta(days=30):
             parsed = parsed.replace(year=parsed.year - 1)
         return parsed.replace(tzinfo=None)
 
