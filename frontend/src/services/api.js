@@ -39,7 +39,8 @@ export const api = {
   getHealth: async () => (await apiClient.get('/health')).data,
 
   getMetrics: async (range = '24h') => (await apiClient.get('/api/metrics', { params: { range } })).data,
-  getSocAlerts: async (range = '24h') => (await apiClient.get('/api/alerts', { params: { range } })).data,
+  getSocAlerts: async (range = 'all') => (await apiClient.get('/api/alerts', { params: { range } })).data,
+  getSocReport: async (range = '24h') => (await apiClient.get('/api/reports', { params: { range } })).data,
   getGeoFeed: async (range = '24h') => (await apiClient.get('/api/geo-feed', { params: { range } })).data,
 
   uploadLog: async (file) => {

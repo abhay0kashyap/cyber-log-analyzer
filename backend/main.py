@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db, init_db
 from models import Event
-from services.aggregation import get_alerts_for_range, get_metrics, get_top_ips_for_range
+from services.aggregation import get_alerts_for_range, get_metrics, get_report_summary, get_top_ips_for_range
 from services.detection import run_detection
 from services.geo import build_geo_feed
 from services.parser import parse_log_content
@@ -110,10 +110,18 @@ async def api_metrics(
 
 @app.get("/api/alerts")
 async def api_alerts(
-    range: str = Query("24h", pattern="^(1h|24h|week)$"),
+    range: str = Query("all", pattern="^(all|1h|24h|week)$"),
     db: Session = Depends(get_db),
 ) -> dict:
     return {"alerts": get_alerts_for_range(db, range)}
+
+
+@app.get("/api/reports")
+async def api_reports(
+    range: str = Query("24h", pattern="^(1h|24h|week)$"),
+    db: Session = Depends(get_db),
+) -> dict:
+    return get_report_summary(db, range)
 
 
 @app.get("/api/geo-feed")

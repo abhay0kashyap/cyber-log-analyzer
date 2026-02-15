@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from sqlalchemy import func
+from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
 from models import Alert, Event
@@ -19,6 +19,12 @@ def resolve_cutoff(range_key: str) -> datetime:
     return now - timedelta(hours=24)
 
 
+def _normalized_range(range_key: str | None, default: str = "24h") -> str:
+    if range_key in SUPPORTED_RANGES:
+        return range_key
+    return default
+
+
 def _timeline_bucket_format(range_key: str) -> str:
     if range_key == "1h":
         return "%Y-%m-%dT%H:%M"
@@ -26,8 +32,7 @@ def _timeline_bucket_format(range_key: str) -> str:
 
 
 def get_metrics(db: Session, range_key: str) -> dict:
-    if range_key not in SUPPORTED_RANGES:
-        range_key = "24h"
+    range_key = _normalized_range(range_key, default="24h")
 
     cutoff = resolve_cutoff(range_key)
     timeline_fmt = _timeline_bucket_format(range_key)
@@ -108,14 +113,13 @@ def get_metrics(db: Session, range_key: str) -> dict:
     }
 
 
-def get_alerts_for_range(db: Session, range_key: str) -> list[dict]:
-    cutoff = resolve_cutoff(range_key)
-    rows = (
-        db.query(Alert)
-        .filter(Alert.timestamp >= cutoff)
-        .order_by(Alert.timestamp.desc())
-        .all()
-    )
+def get_alerts_for_range(db: Session, range_key: str | None) -> list[dict]:
+    query = db.query(Alert)
+    if range_key in SUPPORTED_RANGES:
+        cutoff = resolve_cutoff(range_key)
+        query = query.filter(Alert.timestamp >= cutoff)
+
+    rows = query.order_by(Alert.timestamp.desc()).all()
     return [
         {
             "id": row.id,
@@ -130,7 +134,7 @@ def get_alerts_for_range(db: Session, range_key: str) -> list[dict]:
 
 
 def get_top_ips_for_range(db: Session, range_key: str, limit: int = 20) -> list[dict]:
-    cutoff = resolve_cutoff(range_key)
+    cutoff = resolve_cutoff(_normalized_range(range_key, default="24h"))
     rows = (
         db.query(Event.ip, func.count(Event.id).label("count"))
         .filter(Event.timestamp >= cutoff, Event.ip != "unknown")
@@ -141,3 +145,55 @@ def get_top_ips_for_range(db: Session, range_key: str, limit: int = 20) -> list[
     )
     return [{"ip": ip, "count": count} for ip, count in rows]
 
+
+def get_report_summary(db: Session, range_key: str) -> dict:
+    normalized = _normalized_range(range_key, default="24h")
+    cutoff = resolve_cutoff(normalized)
+
+    event_query = db.query(Event).filter(Event.timestamp >= cutoff)
+    alert_query = db.query(Alert).filter(Alert.timestamp >= cutoff)
+
+    total_events = event_query.count()
+    severity_distribution = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+
+    severity_rows = (
+        db.query(Alert.severity, func.count(Alert.id))
+        .filter(Alert.timestamp >= cutoff)
+        .group_by(Alert.severity)
+        .all()
+    )
+    for severity, count in severity_rows:
+        key = str(severity).lower()
+        if key in severity_distribution:
+            severity_distribution[key] = count
+
+    top_ip_rows = (
+        db.query(
+            Event.ip.label("ip"),
+            func.count(Event.id).label("count"),
+            func.count(func.distinct(Alert.id)).label("alert_count"),
+        )
+        .outerjoin(Alert, and_(Alert.ip == Event.ip, Alert.timestamp >= cutoff))
+        .filter(Event.timestamp >= cutoff, Event.ip != "unknown")
+        .group_by(Event.ip)
+        .order_by(desc(func.count(Event.id)))
+        .limit(10)
+        .all()
+    )
+
+    top_ips = [
+        {
+            "ip": row.ip,
+            "count": int(row.count),
+            "alert_count": int(row.alert_count),
+        }
+        for row in top_ip_rows
+    ]
+
+    return {
+        "range": normalized,
+        "total_events": total_events,
+        "severity_distribution": severity_distribution,
+        "top_ips": top_ips,
+        "generated_at": datetime.utcnow().isoformat(),
+    }

@@ -1,131 +1,93 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
-import AlertDetailModal from '../components/AlertDetailModal';
-import AlertTable from '../components/AlertTable';
-import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { api } from '../services/api';
 import { buildCsvFilename, downloadTextFile, logsToCsv } from '../utils/csvExport';
 import { SEVERITY_COLORS } from '../utils/severity';
 
+const RANGE_OPTIONS = [
+  { value: 'all', label: 'All time' },
+  { value: '1h', label: 'Last 1 hour' },
+  { value: '24h', label: 'Last 24 hours' },
+  { value: 'week', label: 'Last 7 days' },
+];
+
 function Alerts({ onSyncTick }) {
+  const [range, setRange] = useState('all');
   const [severity, setSeverity] = useState('');
-  const [status, setStatus] = useState('');
-  const [ipFilter, setIpFilter] = useState('');
-  const debouncedIpFilter = useDebouncedValue(ipFilter, 350);
-
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
-
-  const [data, setData] = useState({
-    items: [],
-    total: 0,
-    page: 1,
-    page_size: 15,
-    total_pages: 1,
-    severity_counts: { Critical: 0, High: 0, Medium: 0, Low: 0 },
-  });
-
+  const [query, setQuery] = useState('');
+  const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [busyAlertId, setBusyAlertId] = useState(null);
-  const [details, setDetails] = useState(null);
-  const [detailsError, setDetailsError] = useState('');
   const [exportNotice, setExportNotice] = useState('');
 
   const loadAlerts = useCallback(async (isFirst = false) => {
     try {
       if (isFirst) setLoading(true);
-      const payload = await api.getAlerts({
-        page,
-        page_size: pageSize,
-        severity: severity || undefined,
-        status: status || undefined,
-        ip: debouncedIpFilter || undefined,
-        q: debouncedIpFilter || undefined,
-      });
-      setData(payload);
+      const payload = await api.getSocAlerts(range);
+      setAlerts(payload.alerts || []);
       setError('');
       onSyncTick?.();
     } catch (err) {
-      setError(err.message);
+      console.error('Failed to load alerts', err);
+      setError(err.message || 'Failed to load alerts');
     } finally {
       if (isFirst) setLoading(false);
     }
-  }, [debouncedIpFilter, onSyncTick, page, pageSize, severity, status]);
+  }, [onSyncTick, range]);
 
   useEffect(() => {
     loadAlerts(true);
   }, [loadAlerts]);
 
-  useEffect(() => {
-    const timer = setInterval(() => loadAlerts(false), 5000);
-    return () => clearInterval(timer);
-  }, [loadAlerts]);
+  const filteredAlerts = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return alerts.filter((alert) => {
+      const severityMatch = !severity || alert.severity === severity;
+      const textMatch =
+        !q ||
+        alert.ip?.toLowerCase().includes(q) ||
+        alert.type?.toLowerCase().includes(q) ||
+        alert.message?.toLowerCase().includes(q);
+      return severityMatch && textMatch;
+    });
+  }, [alerts, query, severity]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [severity, status, debouncedIpFilter, pageSize]);
+  const severityCounts = useMemo(() => {
+    const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+    for (const alert of filteredAlerts) {
+      if (counts[alert.severity] != null) {
+        counts[alert.severity] += 1;
+      }
+    }
+    return counts;
+  }, [filteredAlerts]);
 
   const severityPieData = useMemo(
-    () => Object.entries(data.severity_counts || {}).map(([name, value]) => ({ name, value })),
-    [data.severity_counts]
+    () => Object.entries(severityCounts).map(([name, value]) => ({ name, value })),
+    [severityCounts]
   );
 
-  const filteredLogs = useMemo(
+  const exportRows = useMemo(
     () =>
-      data.items.map((alert) => ({
+      filteredAlerts.map((alert) => ({
         timestamp: alert.timestamp,
         ip: alert.ip,
         severity: alert.severity,
-        message: alert.description ?? '',
+        message: alert.message || '',
       })),
-    [data.items]
+    [filteredAlerts]
   );
 
-  const openDetails = async (alertId) => {
-    try {
-      const payload = await api.getAlertDetails(alertId);
-      setDetails(payload);
-      setDetailsError('');
-    } catch (err) {
-      setDetailsError(err.message);
-    }
-  };
-
-  const updateStatus = async (alertId, newStatus) => {
-    try {
-      setBusyAlertId(alertId);
-      await api.updateAlertStatus(alertId, newStatus);
-      await loadAlerts(false);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusyAlertId(null);
-    }
-  };
-
-  const blockIp = async (alertId) => {
-    try {
-      setBusyAlertId(alertId);
-      await api.blockAlert(alertId);
-      await loadAlerts(false);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusyAlertId(null);
-    }
-  };
-
-  const handleExportCsv = useCallback(() => {
-    if (!filteredLogs.length) return;
-    const csv = logsToCsv(filteredLogs);
+  const handleExportCsv = () => {
+    if (!exportRows.length) return;
+    const csv = logsToCsv(exportRows);
     const filename = buildCsvFilename();
     downloadTextFile(csv, filename);
-    const successMessage = `Exported ${filteredLogs.length} filtered logs to ${filename}`;
-    setExportNotice(successMessage);
-    console.info(successMessage);
-  }, [filteredLogs]);
+    const note = `Exported ${exportRows.length} alerts to ${filename}`;
+    setExportNotice(note);
+    console.info(note);
+  };
 
   useEffect(() => {
     if (!exportNotice) return;
@@ -138,6 +100,15 @@ function Alerts({ onSyncTick }) {
       <section className="soc-card p-4">
         <div className="grid gap-3 md:grid-cols-4">
           <label className="text-xs text-soc-muted">
+            Range
+            <select className="soc-input mt-1 w-full" value={range} onChange={(e) => setRange(e.target.value)}>
+              {RANGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-xs text-soc-muted">
             Severity
             <select className="soc-input mt-1 w-full" value={severity} onChange={(e) => setSeverity(e.target.value)}>
               <option value="">All</option>
@@ -148,23 +119,13 @@ function Alerts({ onSyncTick }) {
             </select>
           </label>
 
-          <label className="text-xs text-soc-muted">
-            Alert Status
-            <select className="soc-input mt-1 w-full" value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="">All</option>
-              <option value="New">New</option>
-              <option value="Investigating">Investigating</option>
-              <option value="Resolved">Resolved</option>
-            </select>
-          </label>
-
           <label className="text-xs text-soc-muted md:col-span-2">
-            Search IP / Text
+            Search
             <input
               className="soc-input mt-1 w-full"
-              value={ipFilter}
-              onChange={(e) => setIpFilter(e.target.value)}
-              placeholder="Search IP or keywords"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by IP, type, or message"
             />
           </label>
         </div>
@@ -172,14 +133,12 @@ function Alerts({ onSyncTick }) {
 
       <section className="grid gap-4 lg:grid-cols-3">
         <section className="soc-card p-4 lg:col-span-2">
-          <h3 className="text-sm font-semibold text-soc-text">Severity Counts (Filtered)</h3>
+          <h3 className="text-sm font-semibold text-soc-text">Severity Counts</h3>
           <div className="mt-3 grid gap-2 sm:grid-cols-4">
-            {Object.entries(data.severity_counts).map(([name, value]) => (
+            {Object.entries(severityCounts).map(([name, value]) => (
               <div key={name} className="rounded-lg border border-soc-border bg-soc-panelSoft/60 px-3 py-2">
                 <p className="text-xs text-soc-muted">{name}</p>
-                <p className="text-xl font-bold" style={{ color: SEVERITY_COLORS[name] }}>
-                  {value}
-                </p>
+                <p className="text-xl font-bold" style={{ color: SEVERITY_COLORS[name] }}>{value}</p>
               </div>
             ))}
           </div>
@@ -199,39 +158,53 @@ function Alerts({ onSyncTick }) {
         </section>
       </section>
 
-      <AlertTable
-        alerts={data.items}
-        loading={loading}
-        page={data.page}
-        total={data.total}
-        totalPages={data.total_pages}
-        onPageChange={(nextPage) => setPage(nextPage)}
-        onOpenDetails={openDetails}
-        onStatusChange={updateStatus}
-        onBlock={blockIp}
-        busyAlertId={busyAlertId}
-      />
+      <section className="soc-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-soc-panelSoft/80 text-xs uppercase tracking-[0.12em] text-soc-muted">
+              <tr>
+                <th className="px-4 py-3">Timestamp</th>
+                <th className="px-4 py-3">IP</th>
+                <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">Severity</th>
+                <th className="px-4 py-3">Message</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td className="px-4 py-8 text-center text-soc-muted" colSpan={5}>Loading alerts...</td>
+                </tr>
+              ) : filteredAlerts.length === 0 ? (
+                <tr>
+                  <td className="px-4 py-8 text-center text-soc-muted" colSpan={5}>No alerts found for current filters.</td>
+                </tr>
+              ) : (
+                filteredAlerts.map((alert) => (
+                  <tr key={alert.id} className="border-t border-soc-border hover:bg-soc-panelSoft/45">
+                    <td className="px-4 py-3 text-soc-muted">{new Date(alert.timestamp).toLocaleString()}</td>
+                    <td className="px-4 py-3 font-medium text-soc-text">{alert.ip}</td>
+                    <td className="px-4 py-3 text-soc-text">{alert.type}</td>
+                    <td className="px-4 py-3">
+                      <span className="soc-badge border border-soc-border bg-soc-panelSoft/70">{alert.severity}</span>
+                    </td>
+                    <td className="px-4 py-3 text-soc-muted">{alert.message}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <section className="flex flex-wrap gap-2">
-        <button className="soc-button py-1" onClick={handleExportCsv} disabled={filteredLogs.length === 0} type="button">
+        <button className="soc-button py-1" onClick={handleExportCsv} disabled={exportRows.length === 0} type="button">
           Export CSV
         </button>
-        <label className="text-xs text-soc-muted">
-          Page Size
-          <select className="soc-input ml-2" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
-            <option value={10}>10</option>
-            <option value={15}>15</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
-        </label>
       </section>
 
       {error ? <p className="text-sm text-[#ff6a6a]">{error}</p> : null}
-      {detailsError ? <p className="text-sm text-[#ff6a6a]">{detailsError}</p> : null}
       {exportNotice ? <p className="text-sm text-[#7ce38b]">{exportNotice}</p> : null}
-
-      <AlertDetailModal data={details} onClose={() => setDetails(null)} />
     </div>
   );
 }
