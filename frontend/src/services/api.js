@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '');
+const API_BASE_URL = 'https://cyber-log-analyzer-5.onrender.com';
 const WS_BASE_URL = import.meta.env.VITE_WS_URL || '';
 
 const apiClient = axios.create({

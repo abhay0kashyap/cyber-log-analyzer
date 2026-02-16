@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from models import Alert, Event
+from backend.models import Alert, Event
 
 BRUTE_FORCE_THRESHOLD = 5
 REPEATED_FAILED_THRESHOLD = 3

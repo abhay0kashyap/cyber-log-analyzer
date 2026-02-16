@@ -8,7 +8,7 @@ from urllib.request import urlopen
 
 from sqlalchemy.orm import Session
 
-from models import GeoRecord
+from backend.models import GeoRecord
 
 
 def _is_public_ip(ip: str) -> bool:

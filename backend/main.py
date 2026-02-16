@@ -7,20 +7,25 @@ from fastapi import Depends, FastAPI, File, Query, UploadFile, WebSocket, WebSoc
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from database import get_db, init_db
-from models import Event
-from services.aggregation import get_alerts_for_range, get_metrics, get_report_summary, get_top_ips_for_range
-from services.detection import run_detection
-from services.geo import build_geo_feed
-from services.parser import parse_log_content
+from backend.database import get_db, init_db
+from backend.models import Event
+from backend.services.aggregation import (
+    get_alerts_for_range,
+    get_metrics,
+    get_report_summary,
+    get_top_ips_for_range,
+)
+from backend.services.detection import run_detection
+from backend.services.geo import build_geo_feed
+from backend.services.parser import parse_log_content
 
 try:
-    from api.alerts import router as legacy_alerts_router
-    from api.logs import router as legacy_logs_router
-    from api.reports import router as legacy_reports_router
-    from api.settings import router as legacy_settings_router
-    from api.stats import router as legacy_stats_router
-    from core.database import init_db as init_legacy_db
+    from backend.api.alerts import router as legacy_alerts_router
+    from backend.api.logs import router as legacy_logs_router
+    from backend.api.reports import router as legacy_reports_router
+    from backend.api.settings import router as legacy_settings_router
+    from backend.api.stats import router as legacy_stats_router
+    from backend.core.database import init_db as init_legacy_db
 except Exception:  # pragma: no cover - keeps API alive if legacy modules are unavailable
     legacy_alerts_router = None
     legacy_logs_router = None

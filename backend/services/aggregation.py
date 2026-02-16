@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
-from models import Alert, Event
+from backend.models import Alert, Event
 
 SUPPORTED_RANGES = {"1h", "24h", "week"}
 
